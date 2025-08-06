@@ -14,6 +14,6 @@ const router = express.Router();
 router.post("/createUser", createUser);
 router.post("/login", loginUser);
 router.get("/getUsers", authentication, adminMiddleware, getAllUsers);
-router.get("/getUser/:id", authentication, adminMiddleware, getUserById);
+router.get("/getUserByID/:id", authentication, adminMiddleware, getUserById);
 router.put("/updateUser/:id", authentication, updateUser);
 export default router;
