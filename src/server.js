@@ -4,6 +4,7 @@ import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
 import userRoutes from "./routes/user.route.js";
 import categoryRoutes from "./routes/category.route.js";
+import productRoutes from "./routes/product.route.js";
 
 import connectDB from "./config/db.js";
 
@@ -21,6 +22,7 @@ app.get("/health", (req, res) => {
 
 app.use(userRoutes);
 app.use(categoryRoutes);
+app.use(productRoutes);
 
 // Swagger setup
 const swaggerDocument = YAML.load("src/swagger.yaml");

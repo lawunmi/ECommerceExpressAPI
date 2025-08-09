@@ -70,7 +70,7 @@ const updateCategory = async (req, res) => {
   }
 };
 
-const deleteCategory = async (req, res) => {
+const deleteCategoryById = async (req, res) => {
   try {
     const { id } = req.params;
     const deletedCategory = await categoryModel.findByIdAndDelete(id);
@@ -139,7 +139,7 @@ const getCategoryById = async (req, res) => {
 export {
   createCategory,
   updateCategory,
-  deleteCategory,
+  deleteCategoryById,
   getAllCategories,
   getCategoryById,
 };

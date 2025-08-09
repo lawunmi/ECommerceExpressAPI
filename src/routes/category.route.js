@@ -2,7 +2,7 @@ import express from "express";
 import {
   createCategory,
   updateCategory,
-  deleteCategory,
+  deleteCategoryById,
   getAllCategories,
   getCategoryById,
 } from "../controllers/category.controller.js";
@@ -19,10 +19,10 @@ router.put(
   updateCategory
 );
 router.delete(
-  "/deleteCategory/:id",
+  "/deleteCategoryByID/:id",
   authentication,
   adminMiddleware,
-  deleteCategory
+  deleteCategoryById
 );
 router.get("/getCategories", getAllCategories);
 router.get("/getCategoryByID/:id", getCategoryById);

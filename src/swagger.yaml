@@ -487,7 +487,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /deleteCategory/{id}:
+  /deleteCategoryByID/{id}:
     delete:
       summary: Delete category by ID
       tags:
@@ -525,6 +525,285 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: Category not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundError"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /createProduct:
+    post:
+      summary: Create a new product
+      tags:
+        - Products
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: imageCount
+          required: true
+          schema:
+            type: integer
+          description: Number of images to upload for the product
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - name
+                - price
+                - stock
+                - category
+                - productImages
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                price:
+                  type: number
+                  format: float
+                stock:
+                  type: integer
+                category:
+                  type: string
+                  description: Value must be a 24-character hexadecimal string(MongoDB ID)
+                  example: "60c72b2f9b1e8b001c8e4d3a"
+                productImages:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        "201":
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - success
+                      - fail
+                    default: success
+                  message:
+                    type: string
+                  result:
+                    $ref: "#/components/schemas/Product"
+
+        "400":
+          description: Validation failed or missing fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /getAllProducts:
+    get:
+      summary: Get all products
+      tags:
+        - Products
+      responses:
+        "200":
+          description: List of all products
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - success
+                      - fail
+                    default: success
+                  message:
+                    type: string
+                  result:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Product"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /getProductByID/{id}:
+    get:
+      summary: Get product by ID
+      tags:
+        - Products
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the product to retrieve
+      responses:
+        "200":
+          description: Product found successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - success
+                      - fail
+                    default: success
+                  message:
+                    type: string
+                  result:
+                    $ref: "#/components/schemas/Product"
+        "404":
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundError"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /updateProduct/{id}:
+    put:
+      summary: Update a  product
+      tags:
+        - Products
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: imageCount
+          schema:
+            type: integer
+          description: Number of images to upload for the product
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the product to be updated
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                price:
+                  type: number
+                  format: float
+                stock:
+                  type: integer
+                category:
+                  type: string
+                  description: Value must be a 24-character hexadecimal string(MongoDB ID)
+                  example: "60c72b2f9b1e8b001c8e4d3a"
+                productImages:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        "200":
+          description: Product updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - success
+                      - fail
+                    default: success
+                  message:
+                    type: string
+                  result:
+                    $ref: "#/components/schemas/Product"
+
+        "400":
+          description: Validation failed or missing fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /deleteProductByID/{id}:
+    delete:
+      summary: Delete product by ID
+      tags:
+        - Products
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the product to delete
+      responses:
+        "200":
+          description: Product deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - success
+                      - fail
+                    default: success
+                  message:
+                    type: string
+        "403":
+          description: Forbidden - User is not an admin or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Product not found
           content:
             application/json:
               schema:
@@ -575,6 +854,32 @@ components:
         updatedAt:
           type: string
 
+    Product:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: float
+        stock:
+          type: integer
+        category:
+          type: string
+        productImages:
+          type: array
+          items:
+            type: string
+            format: uri
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
     ErrorResponse:
       type: object
       properties:
@@ -598,9 +903,6 @@ components:
           type: object
           additionalProperties:
             type: string
-          example:
-            email: "Email is required"
-            password: "Password must be at least 6 characters"
 
     UnauthorizedError:
       type: object

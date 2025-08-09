@@ -5,10 +5,10 @@ const productSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
+      unique: true,
     },
     description: {
       type: String,
-      required: true,
     },
     price: {
       type: Number,
@@ -23,7 +23,7 @@ const productSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    productImage: {
+    productImages: {
       type: [String],
       required: true,
     },
