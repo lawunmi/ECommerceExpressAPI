@@ -2,7 +2,19 @@ openapi: 3.0.0
 info:
   title: E-commerce API
   version: 1.0.0
-  description: Express API documentation for an E-commerce platform
+  description: Express API for an e-commerce platform where users can browse
+    products, add them to a cart, and make purchases. Admin users can
+    manage product listings, view orders, and update order statuses.
+
+    Features -
+
+    User registration and login
+
+    Product catalogue with categories
+
+    Shopping cart
+
+    Admin specific actions
 
 paths:
   /createUser:
@@ -815,6 +827,200 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /createCart:
+    post:
+      summary: Create a cart
+      tags:
+        - Cart
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cartItems:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      productId:
+                        type: string
+                        description: Value must be a 24-character hexadecimal string(MongoDB ID)
+                        example: "60c72b2f9b1e8b001c8e4d3a"
+                      quantity:
+                        type: number
+              required:
+                - productId
+                - quantity
+      responses:
+        "201":
+          description: Cart created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - success
+                      - fail
+                    default: success
+                  message:
+                    type: string
+                  result:
+                    $ref: "#/components/schemas/Cart"
+
+        "404":
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundError"
+
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /getCart:
+    get:
+      summary: Get user cart
+      tags:
+        - Cart
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Get cart items
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - success
+                      - fail
+                    default: success
+                  message:
+                    type: string
+                  result:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Cart"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /updateCart:
+    post:
+      summary: update cart
+      tags:
+        - Cart
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cartItems:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      quantity:
+                        type: number
+              required:
+                - quantity
+      responses:
+        "201":
+          description: Cart updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - success
+                      - fail
+                    default: success
+                  message:
+                    type: string
+                  result:
+                    $ref: "#/components/schemas/Cart"
+
+        "404":
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundError"
+
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /deleteCartByID/{id}:
+    delete:
+      summary: Delete cart by ID
+      tags:
+        - Cart
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the cart
+      responses:
+        "200":
+          description: Cart deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - success
+                      - fail
+                    default: success
+                  message:
+                    type: string
+        "404":
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundError"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -875,6 +1081,29 @@ components:
           items:
             type: string
             format: uri
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    Cart:
+      type: object
+      properties:
+        cartItems:
+          type: array
+          items:
+            type: object
+            properties:
+              productId:
+                type: string
+              quantity:
+                type: number
+              totalPrice:
+                type: number
+                format: float
+        totalAmount:
+          type: number
+          format: float
         createdAt:
           type: string
         updatedAt:

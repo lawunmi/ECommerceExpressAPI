@@ -166,8 +166,8 @@ const updateProduct = async (req, res) => {
         message: "Product not found",
       });
     }
-    console.log("Product: ", product);
-    console.log("Body payload: ", req.body);
+    //console.log("Product: ", product);
+    //console.log("Body payload: ", req.body);
 
     // Validate image count (only if files were uploaded)
     if (
@@ -211,7 +211,7 @@ const updateProduct = async (req, res) => {
       },
       { new: true }
     );
-    console.log("Payload: ", payload);
+    //console.log("Payload: ", payload);
 
     const { __v, ...productInfo } = updatedProduct.toObject();
 
@@ -254,6 +254,7 @@ const deleteProductById = async (req, res) => {
   }
 };
 
+// Function for image upload
 const imageUpload = async (file, name) => {
   const image = file;
   const uploadedImages = [];
