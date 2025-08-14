@@ -1,26 +1,22 @@
 import userModel from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { sendSuccessResponse, sendErrorResponse } from "../utils/response.js";
 
-const createUser = async (req, res) => {
+const createUser = async (req, res, next) => {
   try {
     // Fields from request body
     const { email, password, ...others } = req.body;
 
     // Validate required fields
     if (!email || !password) {
-      return res
-        .status(400)
-        .json({ status: "fail", message: "Email and password are required" });
+      sendErrorResponse(res, 400, "Email and password are required");
     }
 
     // Check if user already exists
     const existingUser = await userModel.findOne({ email });
     if (existingUser) {
-      return res.status(409).json({
-        status: "fail",
-        message: "A user with this email already exists",
-      });
+      sendErrorResponse(res, 409, "A user with this email already exists");
     }
 
     // Password hashing
@@ -38,49 +34,31 @@ const createUser = async (req, res) => {
     // Exclude certain fields from response
     const { password: savedPassword, __v, ...userInfo } = savedUser.toObject();
 
-    // Response payload
-    res.status(201).json({
-      status: "success",
-      message: "User created successfully",
-      result: userInfo,
-    });
+    sendSuccessResponse(res, 201, "User created successfully", userInfo);
   } catch (error) {
-    res.status(500).json({
-      status: "fail",
-      message: "Internal server error",
-      error: error.message,
-    });
+    next(error);
   }
 };
 
-const loginUser = async (req, res) => {
+const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
     // Validate required fields
     if (!email || !password) {
-      return res.status(400).json({
-        status: "fail",
-        message: "Email and password are required",
-      });
+      sendErrorResponse(res, 400, "Email and password are required");
     }
 
     // Confirm if user exists
     const user = await userModel.findOne({ email });
     if (!user) {
-      return res.status(404).json({
-        status: "fail",
-        message: "User not found",
-      });
+      sendErrorResponse(res, 404, "User not found");
     }
 
     // Password validation
     const isValid = bcrypt.compareSync(password, user.password);
     if (!isValid) {
-      return res.status(401).json({
-        status: "fail",
-        message: "Invalid password",
-      });
+      sendErrorResponse(res, 401, "Invalid password");
     }
 
     // Create token
@@ -108,30 +86,18 @@ const loginUser = async (req, res) => {
         result: userData,
       });
   } catch (error) {
-    res.status(500).json({
-      status: "fail",
-      message: "Internal server error",
-      error: error.message,
-    });
+    next(error);
   }
 };
 
-const getAllUsers = async (req, res) => {
+const getAllUsers = async (req, res, next) => {
   try {
     {
       const users = await userModel.find({}, "-password -__v");
-      res.status(200).json({
-        status: "success",
-        message: "All users",
-        result: users,
-      });
+      sendSuccessResponse(res, 200, "All users", users);
     }
   } catch (error) {
-    res.status(500).json({
-      status: "fail",
-      message: "Internal server error",
-      error: error.message,
-    });
+    next(error);
   }
 };
 
@@ -140,26 +106,15 @@ const getUserById = async (req, res) => {
     const { id } = req.params;
     const user = await userModel.findById(id, "-password -__v");
     if (!user) {
-      return res.status(404).json({
-        status: "fail",
-        message: "User not found",
-      });
+      sendErrorResponse(res, 404, "User not found");
     }
-    res.status(200).json({
-      status: "success",
-      message: "User found",
-      result: user,
-    });
+    sendSuccessResponse(res, 200, "All users", user);
   } catch (error) {
-    res.status(500).json({
-      status: "fail",
-      message: "Internal server error",
-      error: error.message,
-    });
+    next(error);
   }
 };
 
-const updateUser = async (req, res) => {
+const updateUser = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const updates = req.body;
@@ -170,26 +125,15 @@ const updateUser = async (req, res) => {
     });
 
     if (!updatedUser) {
-      return res.status(404).json({
-        status: "fail",
-        message: "User not found",
-      });
+      sendErrorResponse(res, 404, "User not found");
     }
 
     // Exclude certain fields from response
     const { password, __v, ...userInfo } = updatedUser.toObject();
 
-    res.status(200).json({
-      status: "success",
-      message: "User updated successfully",
-      result: userInfo,
-    });
+    sendSuccessResponse(res, 200, "User updated successfully", userInfo);
   } catch (error) {
-    res.status(500).json({
-      status: "fail",
-      message: "Internal server error",
-      error: error.message,
-    });
+    next(error);
   }
 };
 

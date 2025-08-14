@@ -1,15 +1,13 @@
 import categoryModel from "../models/category.model.js";
+import { sendSuccessResponse, sendErrorResponse } from "../utils/response.js";
 
-const createCategory = async (req, res) => {
+const createCategory = async (req, res, next) => {
   try {
     const { name, description } = req.body;
 
     // Validate required fields
     if (!name) {
-      return res.status(400).json({
-        status: "fail",
-        message: "Name is required",
-      });
+      sendErrorResponse(res, 400, "Name is required");
     }
 
     // Create new category
@@ -18,21 +16,18 @@ const createCategory = async (req, res) => {
 
     const { __v, ...categoryInfo } = savedCategory.toObject();
 
-    res.status(201).json({
-      status: "success",
-      message: "Category created successfully",
-      result: categoryInfo,
-    });
+    sendSuccessResponse(
+      res,
+      201,
+      "Category created successfully",
+      categoryInfo
+    );
   } catch (error) {
-    res.status(500).json({
-      status: "fail",
-      message: "Internal server error",
-      error: error.message,
-    });
+    next(error);
   }
 };
 
-const updateCategory = async (req, res) => {
+const updateCategory = async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -48,91 +43,64 @@ const updateCategory = async (req, res) => {
     );
 
     if (!updatedCategory) {
-      return res.status(404).json({
-        status: "fail",
-        message: "Category not found",
-      });
+      sendErrorResponse(res, 404, "Category not found");
     }
 
     const { __v, ...categoryInfo } = updatedCategory.toObject();
 
-    res.status(200).json({
-      status: "success",
-      message: "Category updated successfully",
-      result: categoryInfo,
-    });
+    sendSuccessResponse(
+      res,
+      201,
+      "Category updated successfully",
+      categoryInfo
+    );
   } catch (error) {
-    res.status(500).json({
-      status: "fail",
-      message: "Internal server error",
-      error: error.message,
-    });
+    next(error);
   }
 };
 
-const deleteCategoryById = async (req, res) => {
+const deleteCategoryById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const deletedCategory = await categoryModel.findByIdAndDelete(id);
+
     if (!deletedCategory) {
-      return res.status(404).json({
-        status: "fail",
-        message: "Category not found",
-      });
+      sendErrorResponse(res, 404, "Category not found");
     }
-    res.status(200).json({
-      status: "success",
-      message: "Category deleted successfully",
-    });
+
+    sendSuccessResponse(res, 200, "Category deleted successfully");
   } catch (error) {
-    res.status(500).json({
-      status: "fail",
-      message: "Internal server error",
-      error: error.message,
-    });
+    next(error);
   }
 };
 
-const getAllCategories = async (req, res) => {
+const getAllCategories = async (req, res, next) => {
   try {
     const categories = await categoryModel.find({}, "-__v");
 
-    res.status(200).json({
-      status: "success",
-      message: "Categories retrieved successfully",
-      result: categories,
-    });
+    sendSuccessResponse(
+      res,
+      200,
+      "Category retrieved successfully",
+      categories
+    );
   } catch (error) {
-    res.status(500).json({
-      status: "fail",
-      message: "Internal server error",
-      error: error.message,
-    });
+    next(error);
   }
 };
 
-const getCategoryById = async (req, res) => {
+const getCategoryById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const category = await categoryModel.findById(id, "-__v");
+
     if (!category) {
-      return res.status(404).json({
-        status: "fail",
-        message: "Category not found",
-      });
+      sendErrorResponse(res, 404, "Category not found");
     }
 
-    res.status(200).json({
-      status: "success",
-      message: "Category retrieved successfully",
-      result: category,
-    });
+    sendSuccessResponse(res, 200, "Category retrieved successfully", category);
   } catch (error) {
-    res.status(500).json({
-      status: "fail",
-      message: "Internal server error",
-      error: error.message,
-    });
+    next(error);
   }
 };
 

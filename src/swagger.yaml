@@ -8,13 +8,17 @@ info:
 
     Features -
 
-    User registration and login
+    User registration & login (JWT authentication)
 
-    Product catalogue with categories
+    Product CRUD operations
 
-    Shopping cart
+    Shopping cart creation, update & retrieval
 
-    Admin specific actions
+    Secure routes for authenticated users
+
+    Image uploads for products
+
+    MongoDB + Mongoose for data persistence
 
 paths:
   /createUser:

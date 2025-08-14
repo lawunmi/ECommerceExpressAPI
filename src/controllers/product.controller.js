@@ -2,8 +2,9 @@ import productModel from "../models/product.model.js";
 import categoryModel from "../models/category.model.js";
 import cloudinary from "../utils/cloudinary.js";
 import fs from "fs/promises";
+import { sendErrorResponse, sendSuccessResponse } from "../utils/response.js";
 
-const createProduct = async (req, res) => {
+const createProduct = async (req, res, next) => {
   try {
     const { imageCount } = req.query;
     const expectedImageCount = parseInt(imageCount);
@@ -12,28 +13,23 @@ const createProduct = async (req, res) => {
 
     // Validate image count
     if (productImages.length < expectedImageCount) {
-      return res.status(400).json({
-        status: "fail",
-        message: `Product images must be ${expectedImageCount} images`,
-      });
+      sendErrorResponse(
+        res,
+        400,
+        `Product images must be ${expectedImageCount} images`
+      );
     }
 
     // Validate required fields
     if (!payload.name || !payload.price || !payload.stock) {
-      return res.status(400).json({
-        status: "fail",
-        message: "Provide values for all required fields",
-      });
+      sendErrorResponse(res, 400, "Provide values for all required fields");
     }
 
     // Validate category
     const categoryExists = await categoryModel.findById(category);
     //console.log("Category exists:", categoryExists);
     if (!categoryExists) {
-      return res.status(404).json({
-        status: "fail",
-        message: "Category not found",
-      });
+      sendErrorResponse(res, 404, "Category not found");
     }
 
     // Calling the logic to upload image
@@ -50,43 +46,26 @@ const createProduct = async (req, res) => {
     const savedProduct = await newProduct.save();
     const { __v, ...productInfo } = savedProduct.toObject();
 
-    res.status(201).json({
-      status: "success",
-      message: "Product created successfully",
-      result: productInfo,
-    });
+    sendSuccessResponse(res, 201, "Product created successfully", productInfo);
   } catch (error) {
     //await fs.unlink(image.path); // delete file in case of error
-    console.error("Error creating product:", error);
-    res.status(500).json({
-      status: "fail",
-      message: "Internal server error",
-      error: error.message,
-    });
+    next(error);
   }
 };
 
-const getAllProducts = async (req, res) => {
+const getAllProducts = async (req, res, next) => {
   try {
     const products = await productModel
       .find({}, "-__v")
       .populate("category", "name");
 
-    res.status(200).json({
-      status: "success",
-      result: products,
-    });
+    sendSuccessResponse(res, 200, "Products retrieved successfully", products);
   } catch (error) {
-    console.error("Error fetching products:", error);
-    res.status(500).json({
-      status: "fail",
-      message: "Internal server error",
-      error: error.message,
-    });
+    next(error);
   }
 };
 
-const getProductById = async (req, res) => {
+const getProductById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const product = await productModel
@@ -94,27 +73,16 @@ const getProductById = async (req, res) => {
       .populate("category", "name");
 
     if (!product) {
-      return res.status(404).json({
-        status: "fail",
-        message: "Product not found",
-      });
+      sendErrorResponse(res, 404, "Product not found");
     }
 
-    res.status(200).json({
-      status: "success",
-      result: product,
-    });
+    sendSuccessResponse(res, 200, "Product retrieved successfully", product);
   } catch (error) {
-    console.error("Error fetching product:", error);
-    res.status(500).json({
-      status: "fail",
-      message: "Internal server error",
-      error: error.message,
-    });
+    next(error);
   }
 };
 
-const updateProduct = async (req, res) => {
+const updateProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { imageCount } = req.query;
@@ -136,10 +104,7 @@ const updateProduct = async (req, res) => {
     if (price !== undefined && price !== "") {
       const parsedPrice = parseFloat(price);
       if (isNaN(parsedPrice) || parsedPrice < 0) {
-        return res.status(400).json({
-          status: "fail",
-          message: "Invalid price value",
-        });
+        sendErrorResponse(res, 400, "Invalid price");
       }
       payload.price = parsedPrice;
     }
@@ -147,10 +112,7 @@ const updateProduct = async (req, res) => {
     if (stock !== undefined && stock !== "") {
       const parsedStock = parseInt(stock);
       if (isNaN(parsedStock) || parsedStock < 0) {
-        return res.status(400).json({
-          status: "fail",
-          message: "Invalid stock value",
-        });
+        sendErrorResponse(res, 400, "Invalid value");
       }
       payload.stock = parsedStock;
     }
@@ -161,10 +123,7 @@ const updateProduct = async (req, res) => {
 
     const product = await productModel.findById(id);
     if (!product) {
-      return res.status(404).json({
-        status: "fail",
-        message: "Product not found",
-      });
+      sendErrorResponse(res, 404, "Product not found");
     }
     //console.log("Product: ", product);
     //console.log("Body payload: ", req.body);
@@ -175,10 +134,11 @@ const updateProduct = async (req, res) => {
       productImages.length > 0 &&
       productImages.length < expectedImageCount
     ) {
-      return res.status(400).json({
-        status: "fail",
-        message: `Product images must be ${expectedImageCount} images`,
-      });
+      sendErrorResponse(
+        res,
+        400,
+        `Product images must be ${expectedImageCount} images`
+      );
     }
 
     // Validate category only if provided
@@ -186,10 +146,7 @@ const updateProduct = async (req, res) => {
     if (payload?.category) {
       categoryExists = await categoryModel.findById(payload.category);
       if (!categoryExists) {
-        return res.status(404).json({
-          status: "fail",
-          message: "Category not found",
-        });
+        sendSuccessResponse(res, 404, "Category not found");
       }
     }
 
@@ -215,42 +172,23 @@ const updateProduct = async (req, res) => {
 
     const { __v, ...productInfo } = updatedProduct.toObject();
 
-    res.status(200).json({
-      status: "success",
-      message: "Product updated successfully",
-      result: productInfo,
-    });
+    sendSuccessResponse(res, 200, "Product updated successfully", productInfo);
   } catch (error) {
-    console.error("Error updating product:", error);
-    res.status(500).json({
-      status: "fail",
-      message: "Internal server error",
-      error: error.message,
-    });
+    next(error);
   }
 };
 
-const deleteProductById = async (req, res) => {
+const deleteProductById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const deletedProduct = await productModel.findByIdAndDelete(id);
     //console.log("Deleted Product: ", deletedProduct);
     if (!deletedProduct) {
-      return res.status(404).json({
-        status: "fail",
-        message: "Product not found",
-      });
+      sendErrorResponse(res, 404, "Product not found");
     }
-    res
-      .status(200)
-      .json({ status: "success", messages: "Product deleted successfully" });
+    sendSuccessResponse(res, 200, "Product deleted successfully");
   } catch (error) {
-    console.error("Error deleting product:", error);
-    res.status(500).json({
-      status: "fail",
-      message: "Internal server error",
-      error: error.message,
-    });
+    next(error);
   }
 };
 
