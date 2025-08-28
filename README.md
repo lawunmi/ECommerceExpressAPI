@@ -27,40 +27,42 @@ It also provides secure admin routes for managing the store.
 
 ---
 
-| Method       | Endpoint                  | Description               | Auth Required | Admin Auth Required |
-| ------------ | ------------------------- | ------------------------- | ------------- | ------------------- |
-| **User**     |                           |                           |               |
-| POST         | `/createUser`             | Register a new user       | No            | No                  |
-| POST         | `/login`                  | Login and get JWT         | No            | No                  |
-| GET          | `/getUsers`               | Get all users             | Yes           | Yes                 |
-| GET          | `/getUserByID/:id`        | Get a particular user     | Yes           | Yes                 |
-| PUT          | `/updateUser/:id`         | Update user               | Yes           | No                  |
-| **Category** |                           |                           |               |
-| POST         | `/createCategory`         | Create category           | Yes           | Yes                 |
-| PUT          | `/updateCategory/:id`     | Update a category         | Yes           | Yes                 |
-| DELETE       | `/deleteCategoryByID/:id` | Delete a category         | Yes           | Yes                 |
-| GET          | `/getCategories`          | Get all categories        | No            | No                  |
-| GET          | `/getCategoryByID/:id`    | Get alll categories by id | No            | No                  |
-| **Products** |                           |                           |               |
-| POST         | `/createProduct`          | Get all products          | Yes           | Yes                 |
-| GET          | `/getAllProducts`         | Get product details       | No            | No                  |
-| GET          | `/getProductByID/:id`     | Get a product             | No            | No                  |
-| PUT          | `/updateProduct/:id`      | Update a product          | Yes           | Yes                 |
-| DELETE       | `/deleteProductByID/:id`  | Delete a product          | Yes           | Yes                 |
-| **Cart**     |                           |                           |               |
-| GET          | `/getCart`                | Get current user's cart   | Yes           | No                  |
-| POST         | `/createCart`             | Create cart               | Yes           | No                  |
-| PUT          | `/updateCart/:id`         | Update cart               | Yes           | No                  |
-| DELETE       | `/deleteCartByID/:id`     | Delete cart               | Yes           | No                  |
+| Method       | Endpoint                             | Description               | Auth Required | Admin Auth Required |
+| ------------ | ------------------------------------ | ------------------------- | ------------- | ------------------- |
+| **User**     |                                      |                           |               |
+| POST         | `/createUser`                        | Register a new user       | No            | No                  |
+| POST         | `/login`                             | Login and get JWT         | No            | No                  |
+| GET          | `/getUsers`                          | Get all users             | Yes           | Yes                 |
+| GET          | `/getUser`                           | Fetch user detail         | Yes           | No                  |
+| PUT          | `/updateUser`                        | Update user               | Yes           | No                  |
+| PUT          | `/ChangePasssword`                   | Change user password      | Yes           | No                  |
+| **Category** |                                      |                           |               |
+| POST         | `/createCategory`                    | Create category           | Yes           | Yes                 |
+| PUT          | `/updateCategory/:id`                | Update a category         | Yes           | Yes                 |
+| DELETE       | `/deleteCategoryByID/:id`            | Delete a category         | Yes           | Yes                 |
+| GET          | `/getCategories`                     | Get all categories        | No            | No                  |
+| GET          | `/getCategoryByID/:id`               | Get alll categories by id | No            | No                  |
+| **Products** |                                      |                           |               |
+| POST         | `/createProduct`                     | Get all products          | Yes           | Yes                 |
+| GET          | `/getAllProducts`                    | Get product details       | No            | No                  |
+| GET          | `/getProductByID/:id`                | Get a product             | No            | No                  |
+| PUT          | `/updateProduct/:id`                 | Update a product          | Yes           | Yes                 |
+| DELETE       | `/deleteProductByID/:id`             | Delete a product          | Yes           | Yes                 |
+| **Cart**     |                                      |                           |               |
+| GET          | `/getCart`                           | Get current user's cart   | Yes           | No                  |
+| POST         | `/addToCart`                         | Create cart               | Yes           | No                  |
+| PUT          | `/addItemToExistingCart/:id`         | Update cart               | Yes           | No                  |
+| DELETE       | `/removeItemFromCart/:id/:productId` | Remove an item            | Yes           | No                  |
+| DELETE       | `/clearCart/:id`                     | Clear all items from cart | Yes           | No                  |
 
 ---
 
 src/
-│── config/ # DB connection & environment setup
+│── config/ # DB connection
 │── controllers/ # Business logic
 │── models/ # Mongoose schemas
 │── routes/ # API routes
-│── middleware/ # Authentication
+│── middlewares/ # Authentication
 │── utils/ # Helper functions
-│── app.js # Main Express app
 │── server.js # Server entry point
+│── swagger.yaml # Documentation for the APIs- URL(localhost:5000/api-docs)

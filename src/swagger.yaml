@@ -18,7 +18,19 @@ info:
 
     Image uploads for products
 
-    MongoDB + Mongoose for data persistence
+
+
+    **Note**
+
+    Always clear the value used as placeholder(e.g string) and uncheck the "send empty value" option when performing
+    a PUT(update) method to avoid sending string or an empty value except you want to
+    intentionally update a property to either
+
+
+
+    **Coming Up......**
+
+    Integration with payment system for checkout
 
 paths:
   /createUser:
@@ -43,9 +55,6 @@ paths:
                   type: string
                 password:
                   type: string
-                isAdmin:
-                  type: boolean
-                  default: false
       responses:
         "201":
           description: User created successfully
@@ -197,23 +206,16 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-  /getUserByID/{id}:
+  /getUser:
     get:
       summary: Get user by ID
       tags:
         - Users
       security:
         - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-          description: The ID of the user to retrieve
       responses:
         "200":
-          description: User found successfully
+          description: User detail
           content:
             application/json:
               schema:
@@ -230,7 +232,7 @@ paths:
                   result:
                     $ref: "#/components/schemas/User"
         "403":
-          description: Forbidden - User is not an admin
+          description: Invalid token
           content:
             application/json:
               schema:
@@ -248,20 +250,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /updateUser/{id}:
-    put:
-      summary: Update user by ID
+  /updateUser:
+    patch:
+      summary: Update user
       tags:
         - Users
       security:
         - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-          description: The ID of the user to update
       requestBody:
         required: true
         content:
@@ -271,11 +266,6 @@ paths:
               properties:
                 name:
                   type: string
-                email:
-                  type: string
-                isAdmin:
-                  type: boolean
-                  default: false
       responses:
         "200":
           description: User updated successfully
@@ -295,7 +285,7 @@ paths:
                   result:
                     $ref: "#/components/schemas/User"
         "403":
-          description: Forbidden - User is not an admin or invalid token
+          description: Forbidden - invalid token
           content:
             application/json:
               schema:
@@ -306,6 +296,53 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/NotFoundError"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /changePassword:
+    put:
+      summary: Change user password
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                currentPassword:
+                  type: string
+                newPassword:
+                  type: string
+      responses:
+        "200":
+          description: Password changed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - success
+                      - fail
+                    default: success
+                  message:
+                    type: string
+        "403":
+          description: invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "500":
           description: Internal Server Error
           content:
@@ -831,7 +868,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /createCart:
+  /addToCart:
     post:
       summary: Create a cart
       tags:
@@ -926,13 +963,20 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /updateCart:
-    post:
+  /addItemToExistingCart/{cartId}:
+    put:
       summary: update cart
       tags:
         - Cart
       security:
         - bearerAuth: []
+      parameters:
+        - in: path
+          name: cartId
+          required: true
+          schema:
+            type: string
+          description: The ID of the cart
       requestBody:
         required: true
         content:
@@ -982,7 +1026,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /deleteCartByID/{id}:
+  /removeFromCart/{cartId}/{productId}:
     delete:
       summary: Delete cart by ID
       tags:
@@ -991,11 +1035,17 @@ paths:
         - bearerAuth: []
       parameters:
         - in: path
-          name: id
+          name: cartId
           required: true
           schema:
             type: string
           description: The ID of the cart
+        - in: path
+          name: productId
+          required: true
+          schema:
+            type: string
+          description: The ID of the product
       responses:
         "200":
           description: Cart deleted successfully
@@ -1014,6 +1064,49 @@ paths:
                     type: string
         "404":
           description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundError"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /clearCart/{cartId}:
+    delete:
+      summary: Clear all items from cart by ID
+      tags:
+        - Cart
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: cartId
+          required: true
+          schema:
+            type: string
+          description: The ID of the cart
+      responses:
+        "200":
+          description: Cart cleared successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - success
+                      - fail
+                    default: success
+                  message:
+                    type: string
+        "404":
+          description: Cart not found
           content:
             application/json:
               schema:

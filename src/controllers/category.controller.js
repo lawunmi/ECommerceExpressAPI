@@ -7,7 +7,12 @@ const createCategory = async (req, res, next) => {
 
     // Validate required fields
     if (!name) {
-      sendErrorResponse(res, 400, "Name is required");
+      return sendErrorResponse(res, 400, "Name is required");
+    }
+
+    const existingCategory = await categoryModel.findOne({ name });
+    if (existingCategory) {
+      return sendErrorResponse(res, 409, `Category ${name} already exists`);
     }
 
     // Create new category
@@ -16,7 +21,7 @@ const createCategory = async (req, res, next) => {
 
     const { __v, ...categoryInfo } = savedCategory.toObject();
 
-    sendSuccessResponse(
+    return sendSuccessResponse(
       res,
       201,
       "Category created successfully",
@@ -43,12 +48,12 @@ const updateCategory = async (req, res, next) => {
     );
 
     if (!updatedCategory) {
-      sendErrorResponse(res, 404, "Category not found");
+      return sendErrorResponse(res, 404, "Category not found");
     }
 
     const { __v, ...categoryInfo } = updatedCategory.toObject();
 
-    sendSuccessResponse(
+    return sendSuccessResponse(
       res,
       201,
       "Category updated successfully",
@@ -65,10 +70,10 @@ const deleteCategoryById = async (req, res, next) => {
     const deletedCategory = await categoryModel.findByIdAndDelete(id);
 
     if (!deletedCategory) {
-      sendErrorResponse(res, 404, "Category not found");
+      return sendErrorResponse(res, 404, "Category not found");
     }
 
-    sendSuccessResponse(res, 200, "Category deleted successfully");
+    return sendSuccessResponse(res, 200, "Category deleted successfully");
   } catch (error) {
     next(error);
   }
@@ -78,7 +83,7 @@ const getAllCategories = async (req, res, next) => {
   try {
     const categories = await categoryModel.find({}, "-__v");
 
-    sendSuccessResponse(
+    return sendSuccessResponse(
       res,
       200,
       "Category retrieved successfully",
@@ -95,10 +100,15 @@ const getCategoryById = async (req, res, next) => {
     const category = await categoryModel.findById(id, "-__v");
 
     if (!category) {
-      sendErrorResponse(res, 404, "Category not found");
+      return sendErrorResponse(res, 404, "Category not found");
     }
 
-    sendSuccessResponse(res, 200, "Category retrieved successfully", category);
+    return sendSuccessResponse(
+      res,
+      200,
+      "Category retrieved successfully",
+      category
+    );
   } catch (error) {
     next(error);
   }

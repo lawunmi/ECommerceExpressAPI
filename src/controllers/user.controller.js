@@ -6,26 +6,31 @@ import { sendSuccessResponse, sendErrorResponse } from "../utils/response.js";
 const createUser = async (req, res, next) => {
   try {
     // Fields from request body
-    const { email, password, ...others } = req.body;
+    const { name, email, password } = req.body;
 
     // Validate required fields
     if (!email || !password) {
-      sendErrorResponse(res, 400, "Email and password are required");
+      return sendErrorResponse(res, 400, "Email and password are required");
     }
 
     // Check if user already exists
     const existingUser = await userModel.findOne({ email });
     if (existingUser) {
-      sendErrorResponse(res, 409, "A user with this email already exists");
+      return sendErrorResponse(
+        res,
+        409,
+        "A user with this email already exists"
+      );
     }
 
     // Password hashing
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
     const newUser = new userModel({
+      name,
       email,
       password: hashedPassword,
-      ...others,
+      isAdmin: false,
     });
 
     // Save user to database
@@ -34,7 +39,7 @@ const createUser = async (req, res, next) => {
     // Exclude certain fields from response
     const { password: savedPassword, __v, ...userInfo } = savedUser.toObject();
 
-    sendSuccessResponse(res, 201, "User created successfully", userInfo);
+    return sendSuccessResponse(res, 201, "User created successfully", userInfo);
   } catch (error) {
     next(error);
   }
@@ -46,19 +51,19 @@ const loginUser = async (req, res, next) => {
 
     // Validate required fields
     if (!email || !password) {
-      sendErrorResponse(res, 400, "Email and password are required");
+      return sendErrorResponse(res, 400, "Email and password are required");
     }
 
     // Confirm if user exists
     const user = await userModel.findOne({ email });
     if (!user) {
-      sendErrorResponse(res, 404, "User not found");
+      return sendErrorResponse(res, 404, "User not found");
     }
 
     // Password validation
     const isValid = bcrypt.compareSync(password, user.password);
     if (!isValid) {
-      sendErrorResponse(res, 401, "Invalid password");
+      return sendErrorResponse(res, 401, "Invalid password");
     }
 
     // Create token
@@ -94,21 +99,22 @@ const getAllUsers = async (req, res, next) => {
   try {
     {
       const users = await userModel.find({}, "-password -__v");
-      sendSuccessResponse(res, 200, "All users", users);
+      return sendSuccessResponse(res, 200, "All users", users);
     }
   } catch (error) {
     next(error);
   }
 };
 
-const getUserById = async (req, res) => {
+const getUser = async (req, res) => {
   try {
-    const { id } = req.params;
-    const user = await userModel.findById(id, "-password -__v");
+    const userId = req.user.id;
+
+    const user = await userModel.findById(userId, "-password -__v");
     if (!user) {
-      sendErrorResponse(res, 404, "User not found");
+      return sendErrorResponse(res, 404, "User not found");
     }
-    sendSuccessResponse(res, 200, "All users", user);
+    return sendSuccessResponse(res, 200, "User detail", user);
   } catch (error) {
     next(error);
   }
@@ -117,24 +123,67 @@ const getUserById = async (req, res) => {
 const updateUser = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const updates = req.body;
+    const name = req.body;
 
     // Save to database
-    const updatedUser = await userModel.findByIdAndUpdate(userId, updates, {
-      new: true,
-    });
+    const updatedUser = await userModel.findByIdAndUpdate(
+      userId,
+      { name: name },
+      {
+        new: true,
+      }
+    );
 
     if (!updatedUser) {
-      sendErrorResponse(res, 404, "User not found");
+      return sendErrorResponse(res, 404, "User not found");
     }
 
     // Exclude certain fields from response
     const { password, __v, ...userInfo } = updatedUser.toObject();
 
-    sendSuccessResponse(res, 200, "User updated successfully", userInfo);
+    return sendSuccessResponse(res, 200, "User updated successfully", userInfo);
   } catch (error) {
     next(error);
   }
 };
 
-export { createUser, loginUser, getAllUsers, getUserById, updateUser };
+const changePassword = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { currentPassword, newPassword } = req.body;
+
+    const user = await userModel.findById(userId);
+
+    // Verify current password
+    const isCurrentPassowrValid = bcrypt.compareSync(
+      currentPassword,
+      user.password
+    );
+    if (!isCurrentPassowrValid) {
+      return sendErrorResponse(res, 400, "Current password is incorrect");
+    }
+
+    // New password hashing
+    const salt = await bcrypt.genSalt(10);
+    const newHashedPassword = await bcrypt.hash(newPassword, salt);
+
+    await userModel.findByIdAndUpdate(
+      userId,
+      { password: newHashedPassword },
+      { new: true }
+    );
+
+    return sendErrorResponse(res, 200, "Password changed successfully!");
+  } catch (error) {
+    next(error);
+  }
+};
+
+export {
+  createUser,
+  loginUser,
+  getAllUsers,
+  getUser,
+  updateUser,
+  changePassword,
+};
